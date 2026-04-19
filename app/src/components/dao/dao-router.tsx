@@ -18,9 +18,9 @@ export default function DAOCatchAllPage() {
 
   if (!address) {
     return (
-      <div className="mx-auto max-w-7xl px-4 py-12 text-center">
+      <div className="mx-auto max-w-[900px] px-4 py-12 text-center">
         <h1 className="text-2xl font-bold text-red-400">No DAO address provided</h1>
-        <p className="mt-2 text-gray-400">Navigate to /dao/0x... to view a DAO.</p>
+        <p className="mt-2 text-[#8b8fa3]">Navigate to /dao/0x... to view a DAO.</p>
       </div>
     );
   }

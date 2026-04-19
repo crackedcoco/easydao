@@ -158,9 +158,9 @@ export default function CreateDAOPage() {
   );
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:px-8">
-      <h1 className="text-3xl font-bold">Create Your DAO</h1>
-      <p className="mt-2 text-gray-400">
+    <div className="mx-auto max-w-[900px] px-4 py-12 sm:px-6">
+      <h1 className="text-2xl font-bold text-white">Create Your DAO</h1>
+      <p className="mt-2 text-[#8b8fa3]">
         Set up your decentralized organization in a few simple steps.
       </p>
 
@@ -172,10 +172,10 @@ export default function CreateDAOPage() {
               onClick={() => i < step && setStep(i)}
               className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium transition-colors ${
                 i === step
-                  ? "bg-indigo-500 text-white"
+                  ? "bg-[#6c7bff] text-white"
                   : i < step
-                    ? "bg-indigo-500/20 text-indigo-400 hover:bg-indigo-500/30"
-                    : "bg-white/5 text-gray-500"
+                    ? "bg-[#6c7bff]/20 text-[#6c7bff] hover:bg-[#6c7bff]/30"
+                    : "bg-[#1a1d27] text-[#8b8fa3]"
               }`}
             >
               {i < step ? (
@@ -188,20 +188,20 @@ export default function CreateDAOPage() {
             </button>
             <span
               className={`hidden text-sm sm:block ${
-                i === step ? "text-white" : "text-gray-500"
+                i === step ? "text-white" : "text-[#8b8fa3]"
               }`}
             >
               {label}
             </span>
             {i < STEPS.length - 1 && (
-              <div className="mx-2 h-px w-8 bg-white/10" />
+              <div className="mx-2 h-px w-8 bg-[#2a2d3a]" />
             )}
           </div>
         ))}
       </div>
 
       {/* Step content */}
-      <Card className="mt-8 border-white/10 bg-white/[0.02]">
+      <Card className="mt-8 border-[#2a2d3a] bg-[#1a1d27]">
         <CardContent className="p-6">
           {/* Step 1: Name & Token */}
           {step === 0 && (
@@ -213,9 +213,9 @@ export default function CreateDAOPage() {
                   placeholder="My Awesome DAO"
                   value={daoName}
                   onChange={(e) => setDaoName(e.target.value)}
-                  className="mt-2 border-white/10 bg-white/5"
+                  className="mt-2 border-[#2a2d3a] bg-[#0f1117]"
                 />
-                <p className="mt-1 text-xs text-gray-500">
+                <p className="mt-1 text-xs text-[#8b8fa3]">
                   This will also be used as the governance token name.
                 </p>
               </div>
@@ -227,9 +227,9 @@ export default function CreateDAOPage() {
                   value={tokenSymbol}
                   onChange={(e) => setTokenSymbol(e.target.value.toUpperCase())}
                   maxLength={10}
-                  className="mt-2 border-white/10 bg-white/5"
+                  className="mt-2 border-[#2a2d3a] bg-[#0f1117]"
                 />
-                <p className="mt-1 text-xs text-gray-500">
+                <p className="mt-1 text-xs text-[#8b8fa3]">
                   Short ticker symbol for your governance token (e.g., DAO, GOV).
                 </p>
               </div>
@@ -242,7 +242,7 @@ export default function CreateDAOPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="font-medium">Members & Token Distribution</h3>
-                  <p className="text-sm text-gray-400">
+                  <p className="text-sm text-[#8b8fa3]">
                     Add wallet addresses and the number of tokens each member receives.
                   </p>
                 </div>
@@ -250,7 +250,7 @@ export default function CreateDAOPage() {
                   variant="outline"
                   size="sm"
                   onClick={addMember}
-                  className="border-white/10"
+                  className="border-[#2a2d3a]"
                 >
                   + Add Member
                 </Button>
@@ -264,7 +264,7 @@ export default function CreateDAOPage() {
                         placeholder="0x..."
                         value={member.address}
                         onChange={(e) => updateMember(i, "address", e.target.value)}
-                        className="border-white/10 bg-white/5 font-mono text-sm"
+                        className="border-[#2a2d3a] bg-[#0f1117] font-mono text-sm"
                       />
                     </div>
                     <div className="w-36">
@@ -273,7 +273,7 @@ export default function CreateDAOPage() {
                         placeholder="Tokens"
                         value={member.amount}
                         onChange={(e) => updateMember(i, "amount", e.target.value)}
-                        className="border-white/10 bg-white/5"
+                        className="border-[#2a2d3a] bg-[#0f1117]"
                       />
                     </div>
                     {members.length > 1 && (
@@ -281,7 +281,7 @@ export default function CreateDAOPage() {
                         variant="ghost"
                         size="icon"
                         onClick={() => removeMember(i)}
-                        className="shrink-0 text-gray-500 hover:text-red-400"
+                        className="shrink-0 text-[#8b8fa3] hover:text-red-400"
                       >
                         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
@@ -292,11 +292,11 @@ export default function CreateDAOPage() {
                 ))}
               </div>
 
-              <div className="rounded-lg border border-white/5 bg-white/[0.02] p-4">
-                <p className="text-sm text-gray-400">
+              <div className="rounded-lg border border-[#2a2d3a] bg-[#1a1d27] p-4">
+                <p className="text-sm text-[#8b8fa3]">
                   Total supply: <span className="font-medium text-white">{totalSupply.toLocaleString()}</span> {tokenSymbol || "tokens"}
                 </p>
-                <p className="mt-1 text-xs text-gray-500">
+                <p className="mt-1 text-xs text-[#8b8fa3]">
                   Tip: Paste CSV data (address,amount per line) into the first address field.
                 </p>
               </div>
@@ -309,9 +309,9 @@ export default function CreateDAOPage() {
               <div>
                 <div className="flex items-center justify-between">
                   <Label>Voting Delay</Label>
-                  <span className="text-sm text-indigo-400">{blocksToTime(votingDelay)}</span>
+                  <span className="text-sm text-[#6c7bff]">{blocksToTime(votingDelay)}</span>
                 </div>
-                <p className="mb-3 text-xs text-gray-500">
+                <p className="mb-3 text-xs text-[#8b8fa3]">
                   Review period before voting starts after a proposal is created.
                 </p>
                 <Slider
@@ -326,9 +326,9 @@ export default function CreateDAOPage() {
               <div>
                 <div className="flex items-center justify-between">
                   <Label>Voting Duration</Label>
-                  <span className="text-sm text-indigo-400">{blocksToTime(votingPeriod)}</span>
+                  <span className="text-sm text-[#6c7bff]">{blocksToTime(votingPeriod)}</span>
                 </div>
-                <p className="mb-3 text-xs text-gray-500">
+                <p className="mb-3 text-xs text-[#8b8fa3]">
                   How long members can vote on proposals.
                 </p>
                 <Slider
@@ -343,9 +343,9 @@ export default function CreateDAOPage() {
               <div>
                 <div className="flex items-center justify-between">
                   <Label>Quorum</Label>
-                  <span className="text-sm text-indigo-400">{quorum}% of total supply</span>
+                  <span className="text-sm text-[#6c7bff]">{quorum}% of total supply</span>
                 </div>
-                <p className="mb-3 text-xs text-gray-500">
+                <p className="mb-3 text-xs text-[#8b8fa3]">
                   Minimum percentage of tokens that must vote for a proposal to pass.
                 </p>
                 <Slider
@@ -360,11 +360,11 @@ export default function CreateDAOPage() {
               <div>
                 <div className="flex items-center justify-between">
                   <Label>Proposal Threshold</Label>
-                  <span className="text-sm text-indigo-400">
+                  <span className="text-sm text-[#6c7bff]">
                     {proposalThreshold === 0 ? "Any holder" : `${proposalThreshold.toLocaleString()} tokens`}
                   </span>
                 </div>
-                <p className="mb-3 text-xs text-gray-500">
+                <p className="mb-3 text-xs text-[#8b8fa3]">
                   Minimum tokens needed to create a proposal.
                 </p>
                 <Slider
@@ -379,9 +379,9 @@ export default function CreateDAOPage() {
               <div>
                 <div className="flex items-center justify-between">
                   <Label>Execution Delay</Label>
-                  <span className="text-sm text-indigo-400">{secondsToTime(timelockDelay)}</span>
+                  <span className="text-sm text-[#6c7bff]">{secondsToTime(timelockDelay)}</span>
                 </div>
-                <p className="mb-3 text-xs text-gray-500">
+                <p className="mb-3 text-xs text-[#8b8fa3]">
                   Mandatory waiting period after a vote passes before it can be executed.
                 </p>
                 <Slider
@@ -400,38 +400,38 @@ export default function CreateDAOPage() {
             <div className="space-y-6">
               <h3 className="font-medium">Review Your DAO</h3>
 
-              <div className="space-y-4 rounded-lg border border-white/5 bg-white/[0.02] p-6">
+              <div className="space-y-4 rounded-lg border border-[#2a2d3a] bg-[#1a1d27] p-6">
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <p className="text-gray-500">DAO Name</p>
+                    <p className="text-[#8b8fa3]">DAO Name</p>
                     <p className="font-medium">{daoName}</p>
                   </div>
                   <div>
-                    <p className="text-gray-500">Token Symbol</p>
+                    <p className="text-[#8b8fa3]">Token Symbol</p>
                     <p className="font-medium">{tokenSymbol}</p>
                   </div>
                   <div>
-                    <p className="text-gray-500">Members</p>
+                    <p className="text-[#8b8fa3]">Members</p>
                     <p className="font-medium">{members.length}</p>
                   </div>
                   <div>
-                    <p className="text-gray-500">Total Supply</p>
+                    <p className="text-[#8b8fa3]">Total Supply</p>
                     <p className="font-medium">{totalSupply.toLocaleString()} {tokenSymbol}</p>
                   </div>
                   <div>
-                    <p className="text-gray-500">Voting Delay</p>
+                    <p className="text-[#8b8fa3]">Voting Delay</p>
                     <p className="font-medium">{blocksToTime(votingDelay)}</p>
                   </div>
                   <div>
-                    <p className="text-gray-500">Voting Duration</p>
+                    <p className="text-[#8b8fa3]">Voting Duration</p>
                     <p className="font-medium">{blocksToTime(votingPeriod)}</p>
                   </div>
                   <div>
-                    <p className="text-gray-500">Quorum</p>
+                    <p className="text-[#8b8fa3]">Quorum</p>
                     <p className="font-medium">{quorum}%</p>
                   </div>
                   <div>
-                    <p className="text-gray-500">Execution Delay</p>
+                    <p className="text-[#8b8fa3]">Execution Delay</p>
                     <p className="font-medium">{secondsToTime(timelockDelay)}</p>
                   </div>
                 </div>
@@ -459,7 +459,7 @@ export default function CreateDAOPage() {
                 <Button
                   onClick={handleDeploy}
                   disabled={isPending || isConfirming}
-                  className="w-full bg-indigo-500 hover:bg-indigo-400"
+                  className="w-full bg-[#6c7bff] hover:bg-[#5a6aee]"
                   size="lg"
                 >
                   {isPending
@@ -481,14 +481,14 @@ export default function CreateDAOPage() {
             variant="outline"
             onClick={() => setStep(step - 1)}
             disabled={step === 0}
-            className="border-white/10"
+            className="border-[#2a2d3a]"
           >
             Back
           </Button>
           <Button
             onClick={() => setStep(step + 1)}
             disabled={!canProceed()}
-            className="bg-indigo-500 hover:bg-indigo-400"
+            className="bg-[#6c7bff] hover:bg-[#5a6aee]"
           >
             Next
           </Button>
@@ -499,7 +499,7 @@ export default function CreateDAOPage() {
           <Button
             variant="outline"
             onClick={() => setStep(step - 1)}
-            className="border-white/10"
+            className="border-[#2a2d3a]"
           >
             Back
           </Button>

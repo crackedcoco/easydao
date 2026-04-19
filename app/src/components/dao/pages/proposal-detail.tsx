@@ -39,19 +39,19 @@ export default function ProposalDetailPage({ governorAddress, proposalId: propos
         {state !== null && <Badge className={PROPOSAL_STATE_COLORS[state as ProposalState]} variant="outline">{PROPOSAL_STATE_LABELS[state as ProposalState]}</Badge>}
       </div>
       {votes && (
-        <Card className="border-white/10 bg-white/[0.02]">
+        <Card className="border-[#2a2d3a] bg-[#1a1d27]">
           <CardHeader><CardTitle className="text-lg">Votes</CardTitle></CardHeader>
           <CardContent className="space-y-3">
             {[
               { label: "Against", color: "bg-red-500", textColor: "text-red-400", value: votes[0] },
               { label: "For", color: "bg-green-500", textColor: "text-green-400", value: votes[1] },
-              { label: "Abstain", color: "bg-gray-500", textColor: "text-gray-400", value: votes[2] },
+              { label: "Abstain", color: "bg-gray-500", textColor: "text-[#8b8fa3]", value: votes[2] },
             ].map((item) => {
               const total = votes[0] + votes[1] + votes[2];
               return (
                 <div key={item.label}>
                   <div className="flex justify-between text-sm"><span className={item.textColor}>{item.label}</span><span>{Number(formatEther(item.value)).toLocaleString()}</span></div>
-                  <div className="mt-1 h-2 rounded-full bg-white/5"><div className={`h-full rounded-full ${item.color}`} style={{ width: `${votePercent(item.value, total)}%` }} /></div>
+                  <div className="mt-1 h-2 rounded-full bg-[#0f1117]"><div className={`h-full rounded-full ${item.color}`} style={{ width: `${votePercent(item.value, total)}%` }} /></div>
                 </div>
               );
             })}
@@ -59,12 +59,12 @@ export default function ProposalDetailPage({ governorAddress, proposalId: propos
         </Card>
       )}
       {state === ProposalState.Active && isConnected && (
-        <Card className="border-white/10 bg-white/[0.02]">
+        <Card className="border-[#2a2d3a] bg-[#1a1d27]">
           <CardHeader><CardTitle className="text-lg">Cast Your Vote</CardTitle></CardHeader>
           <CardContent className="flex gap-3">
-            <Button onClick={() => handleVote(1)} disabled={isVoting || isVoteConfirming} className="flex-1 bg-green-600 hover:bg-green-500">Vote For</Button>
-            <Button onClick={() => handleVote(0)} disabled={isVoting || isVoteConfirming} className="flex-1 bg-red-600 hover:bg-red-500">Vote Against</Button>
-            <Button onClick={() => handleVote(2)} disabled={isVoting || isVoteConfirming} variant="outline" className="flex-1 border-white/10">Abstain</Button>
+            <Button onClick={() => handleVote(1)} disabled={isVoting || isVoteConfirming} className="flex-1 bg-[#00d4aa] hover:bg-[#00c49a] text-[#0f1117]">Vote For</Button>
+            <Button onClick={() => handleVote(0)} disabled={isVoting || isVoteConfirming} className="flex-1 bg-[#ff6b9d] hover:bg-[#ee5a8c] text-[#0f1117]">Vote Against</Button>
+            <Button onClick={() => handleVote(2)} disabled={isVoting || isVoteConfirming} variant="outline" className="flex-1 border-[#2a2d3a]">Abstain</Button>
           </CardContent>
         </Card>
       )}

@@ -25,23 +25,23 @@ export default function DAOOverviewPage({ governorAddress }: { governorAddress: 
     <div className="space-y-8">
       <div className="grid gap-4 sm:grid-cols-3">
         {stats.map((stat) => (
-          <Card key={stat.label} className="border-white/10 bg-white/[0.02]">
+          <Card key={stat.label} className="border-[#2a2d3a] bg-[#1a1d27]">
             <CardContent className="p-6">
-              <p className="text-sm text-gray-400">{stat.label}</p>
+              <p className="text-sm text-[#8b8fa3]">{stat.label}</p>
               <p className="mt-1 text-2xl font-bold">{stat.value}</p>
             </CardContent>
           </Card>
         ))}
       </div>
       <div className="grid gap-6 sm:grid-cols-2">
-        <Card className="border-white/10 bg-white/[0.02]">
+        <Card className="border-[#2a2d3a] bg-[#1a1d27]">
           <CardHeader><CardTitle className="text-lg">Governor Contract</CardTitle></CardHeader>
-          <CardContent><p className="break-all font-mono text-sm text-gray-400">{governorAddress}</p></CardContent>
+          <CardContent><p className="break-all font-mono text-sm text-[#8b8fa3]">{governorAddress}</p></CardContent>
         </Card>
-        <Card className="border-white/10 bg-white/[0.02]">
+        <Card className="border-[#2a2d3a] bg-[#1a1d27]">
           <CardHeader><CardTitle className="text-lg">Quick Actions</CardTitle></CardHeader>
           <CardContent>
-            <a href={`https://basescan.org/address/${governorAddress}`} target="_blank" rel="noopener noreferrer" className="block text-sm text-indigo-400 hover:text-indigo-300">View on Basescan</a>
+            <a href={`https://basescan.org/address/${governorAddress}`} target="_blank" rel="noopener noreferrer" className="block text-sm text-[#6c7bff] hover:text-[#6c7bff]">View on Basescan</a>
           </CardContent>
         </Card>
       </div>

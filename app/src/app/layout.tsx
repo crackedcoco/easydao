@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "EasyDAO - Create & Manage DAOs on Base",
+  title: "EasyDAO - Huntington Analytics",
   description:
     "Create a DAO in minutes. No code required. Treasury management, proposals, voting, and member governance on Base.",
 };
@@ -29,7 +29,7 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased dark`}
     >
-      <body className="flex min-h-full flex-col bg-gray-950 text-white">
+      <body className="flex min-h-full flex-col bg-[#0f1117] text-[#e2e4ea]">
         <AppShell>{children}</AppShell>
       </body>
     </html>

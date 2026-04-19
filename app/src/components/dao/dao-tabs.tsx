@@ -17,15 +17,15 @@ export function DAOTabs({ governorAddress, children }: { governorAddress: string
   ];
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+    <div className="mx-auto max-w-[900px] px-4 py-8 sm:px-6 lg:px-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold">{(name as string) || "DAO"}</h1>
-        <p className="mt-1 font-mono text-sm text-gray-500">
+        <p className="mt-1 font-mono text-sm text-[#8b8fa3]">
           {governorAddress}
         </p>
       </div>
 
-      <div className="mb-8 flex gap-1 rounded-lg border border-white/10 bg-white/[0.02] p-1">
+      <div className="mb-8 flex gap-1 rounded-lg border border-[#2a2d3a] bg-[#1a1d27] p-1">
         {tabs.map((tab) => {
           const isActive =
             tab.href === basePath
@@ -37,8 +37,8 @@ export function DAOTabs({ governorAddress, children }: { governorAddress: string
               href={tab.href}
               className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
                 isActive
-                  ? "bg-indigo-500/10 text-indigo-400"
-                  : "text-gray-400 hover:text-white"
+                  ? "bg-[#6c7bff]/10 text-[#6c7bff]"
+                  : "text-[#8b8fa3] hover:text-white"
               }`}
             >
               {tab.label}
