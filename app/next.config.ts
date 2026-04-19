@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: "export",
+  // Use static export for production (S3 deploy). Dev server works without it.
+  ...(process.env.NODE_ENV === "production" ? { output: "export" } : {}),
   images: {
     unoptimized: true,
   },
