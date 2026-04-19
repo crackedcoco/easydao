@@ -1,0 +1,12 @@
+node_modules/
+.next/
+out/
+.env.local
+.env*.local
+
+# Foundry
+contracts/out/
+contracts/cache/
+
+# OS
+.DS_Store
