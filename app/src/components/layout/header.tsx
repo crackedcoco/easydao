@@ -18,6 +18,9 @@ export function Header() {
             <Link href="/create" className="text-sm text-[#8b8fa3] transition-colors hover:text-white">
               Create
             </Link>
+            <Link href="/docs" className="text-sm text-[#8b8fa3] transition-colors hover:text-white">
+              Docs
+            </Link>
           </nav>
         </div>
         <div className="flex items-center gap-4">
