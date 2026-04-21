@@ -5,7 +5,6 @@ import { useAccount, useChainId, useWaitForTransactionReceipt } from "wagmi";
 import { parseEther, isAddress, decodeEventLog } from "viem";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
@@ -17,8 +16,6 @@ interface Member {
   amount: string;
 }
 
-const STEPS = ["Name & Token", "Members", "Governance", "Review & Deploy"];
-
 export default function CreateDAOPage() {
   const router = useRouter();
   const { address, isConnected } = useAccount();
@@ -27,16 +24,15 @@ export default function CreateDAOPage() {
 
   const [step, setStep] = useState(0);
 
-  // Step 1: Name & Token
+  // DAO info
   const [daoName, setDaoName] = useState("");
   const [tokenSymbol, setTokenSymbol] = useState("");
-
-  // Step 2: Members
   const [members, setMembers] = useState<Member[]>([
     { address: "", amount: "100000" },
   ]);
 
-  // Step 3: Governance
+  // Governance (hidden by default)
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const [votingDelay, setVotingDelay] = useState(GOVERNANCE_DEFAULTS.votingDelay);
   const [votingPeriod, setVotingPeriod] = useState(GOVERNANCE_DEFAULTS.votingPeriod);
   const [quorum, setQuorum] = useState(GOVERNANCE_DEFAULTS.quorumNumerator);
@@ -49,7 +45,6 @@ export default function CreateDAOPage() {
     hash: txHash,
   });
 
-  // C1 fix: redirect to new DAO after successful creation
   useEffect(() => {
     if (isSuccess && receipt?.logs) {
       try {
@@ -68,14 +63,29 @@ export default function CreateDAOPage() {
               }
             }
           } catch {
-            // not our event, skip
+            // not our event
           }
         }
       } catch {
-        // fallback: stay on page with success message
+        // fallback
       }
     }
   }, [isSuccess, receipt, router]);
+
+  // Auto-generate symbol from name
+  function handleNameChange(name: string) {
+    setDaoName(name);
+    if (!tokenSymbol || tokenSymbol === deriveSymbol(daoName)) {
+      setTokenSymbol(deriveSymbol(name));
+    }
+  }
+
+  function deriveSymbol(name: string): string {
+    const words = name.trim().split(/\s+/).filter(w => w.toLowerCase() !== "dao");
+    if (words.length === 0) return "";
+    if (words.length === 1) return words[0].slice(0, 4).toUpperCase();
+    return words.map(w => w[0]).join("").slice(0, 5).toUpperCase();
+  }
 
   function addMember() {
     setMembers([...members, { address: "", amount: "100000" }]);
@@ -92,46 +102,23 @@ export default function CreateDAOPage() {
     setMembers(updated);
   }
 
-  function handleCSVPaste(text: string) {
-    const lines = text.trim().split("\n");
-    const parsed: Member[] = [];
-    for (const line of lines) {
-      const [addr, amt] = line.split(",").map((s) => s.trim());
-      if (addr && amt) {
-        parsed.push({ address: addr, amount: amt });
-      }
+  // Auto-fill connected wallet as first member
+  useEffect(() => {
+    if (isConnected && address && members.length === 1 && !members[0].address) {
+      setMembers([{ address, amount: "100000" }]);
     }
-    if (parsed.length > 0) setMembers(parsed);
-  }
+  }, [isConnected, address]);
 
-  const canProceed = () => {
-    switch (step) {
-      case 0:
-        return daoName.length > 0 && tokenSymbol.length > 0;
-      case 1:
-        return (
-          members.length > 0 &&
-          members.every(
-            (m) =>
-              isAddress(m.address) &&
-              Number(m.amount) > 0
-          )
-        );
-      case 2:
-        return true;
-      case 3:
-        return isConnected;
-      default:
-        return false;
-    }
-  };
+  const totalSupply = members.reduce((sum, m) => sum + (Number(m.amount) || 0), 0);
+
+  const step1Valid =
+    daoName.length > 0 &&
+    tokenSymbol.length > 0 &&
+    members.length > 0 &&
+    members.every((m) => isAddress(m.address) && Number(m.amount) > 0);
 
   function handleDeploy() {
     if (!factoryAddress || !address) return;
-
-    const tokenRecipients = members.map((m) => m.address as `0x${string}`);
-    const tokenAmounts = members.map((m) => parseEther(m.amount));
-
     writeContract({
       address: factoryAddress,
       abi: factoryAbi,
@@ -140,8 +127,8 @@ export default function CreateDAOPage() {
         {
           name: daoName,
           tokenSymbol,
-          tokenRecipients,
-          tokenAmounts,
+          tokenRecipients: members.map((m) => m.address as `0x${string}`),
+          tokenAmounts: members.map((m) => parseEther(m.amount)),
           votingDelay,
           votingPeriod,
           proposalThreshold: BigInt(proposalThreshold),
@@ -152,357 +139,287 @@ export default function CreateDAOPage() {
     });
   }
 
-  const totalSupply = members.reduce(
-    (sum, m) => sum + (Number(m.amount) || 0),
-    0
-  );
-
   return (
-    <div className="mx-auto max-w-[900px] px-4 py-12 sm:px-6">
-      <h1 className="text-2xl font-bold text-white">Create Your DAO</h1>
-      <p className="mt-2 text-[#8b8fa3]">
-        Set up your decentralized organization in a few simple steps.
-      </p>
-
+    <div className="mx-auto max-w-[600px] px-4 py-10 sm:px-6">
       {/* Step indicator */}
-      <div className="mt-8 flex items-center gap-2">
-        {STEPS.map((label, i) => (
-          <div key={label} className="flex items-center gap-2">
-            <button
-              onClick={() => i < step && setStep(i)}
-              className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium transition-colors ${
-                i === step
-                  ? "bg-[#6c7bff] text-white"
-                  : i < step
-                    ? "bg-[#6c7bff]/20 text-[#6c7bff] hover:bg-[#6c7bff]/30"
-                    : "bg-[#1a1d27] text-[#8b8fa3]"
-              }`}
-            >
-              {i < step ? (
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-                </svg>
-              ) : (
-                i + 1
-              )}
-            </button>
-            <span
-              className={`hidden text-sm sm:block ${
-                i === step ? "text-white" : "text-[#8b8fa3]"
-              }`}
-            >
-              {label}
-            </span>
-            {i < STEPS.length - 1 && (
-              <div className="mx-2 h-px w-8 bg-[#2a2d3a]" />
-            )}
-          </div>
-        ))}
+      <div className="mb-8 flex items-center justify-center gap-3">
+        <button
+          onClick={() => step > 0 && setStep(0)}
+          className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium ${
+            step === 0 ? "bg-[#6c7bff] text-white" : "bg-[#6c7bff]/20 text-[#6c7bff]"
+          }`}
+        >
+          {step > 0 ? "\u2713" : "1"}
+        </button>
+        <div className="h-px w-10 bg-[#2a2d3a]" />
+        <div
+          className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium ${
+            step === 1 ? "bg-[#6c7bff] text-white" : "bg-[#1a1d27] text-[#8b8fa3]"
+          }`}
+        >
+          2
+        </div>
       </div>
 
-      {/* Step content */}
-      <Card className="mt-8 border-[#2a2d3a] bg-[#1a1d27]">
-        <CardContent className="p-6">
-          {/* Step 1: Name & Token */}
-          {step === 0 && (
-            <div className="space-y-6">
+      {/* Step 1: Everything */}
+      {step === 0 && (
+        <div className="space-y-8">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-white">Set up your DAO</h1>
+            <p className="mt-1 text-sm text-[#8b8fa3]">Name it and add members</p>
+          </div>
+
+          {/* Name */}
+          <div className="rounded-xl border border-[#2a2d3a] bg-[#1a1d27] p-5">
+            <div className="space-y-4">
               <div>
-                <Label htmlFor="daoName">DAO Name</Label>
+                <Label htmlFor="daoName" className="text-xs text-[#8b8fa3]">DAO Name</Label>
                 <Input
                   id="daoName"
-                  placeholder="My Awesome DAO"
+                  placeholder="Acme DAO"
                   value={daoName}
-                  onChange={(e) => setDaoName(e.target.value)}
-                  className="mt-2 border-[#2a2d3a] bg-[#0f1117]"
+                  onChange={(e) => handleNameChange(e.target.value)}
+                  className="mt-1.5 border-[#2a2d3a] bg-[#0f1117]"
                 />
-                <p className="mt-1 text-xs text-[#8b8fa3]">
-                  This will also be used as the governance token name.
-                </p>
               </div>
               <div>
-                <Label htmlFor="tokenSymbol">Token Symbol</Label>
+                <Label htmlFor="tokenSymbol" className="text-xs text-[#8b8fa3]">Token Symbol</Label>
                 <Input
                   id="tokenSymbol"
-                  placeholder="DAO"
+                  placeholder="ACME"
                   value={tokenSymbol}
                   onChange={(e) => setTokenSymbol(e.target.value.toUpperCase())}
-                  maxLength={10}
-                  className="mt-2 border-[#2a2d3a] bg-[#0f1117]"
+                  maxLength={5}
+                  className="mt-1.5 border-[#2a2d3a] bg-[#0f1117]"
                 />
-                <p className="mt-1 text-xs text-[#8b8fa3]">
-                  Short ticker symbol for your governance token (e.g., DAO, GOV).
-                </p>
               </div>
             </div>
-          )}
+          </div>
 
-          {/* Step 2: Members */}
-          {step === 1 && (
-            <div className="space-y-6">
-              <div className="flex items-center justify-between">
+          {/* Members */}
+          <div className="rounded-xl border border-[#2a2d3a] bg-[#1a1d27] p-5">
+            <div className="mb-4 flex items-center justify-between">
+              <Label className="text-xs text-[#8b8fa3]">
+                Members &middot; {totalSupply.toLocaleString()} {tokenSymbol || "tokens"} total
+              </Label>
+              <button
+                onClick={addMember}
+                className="text-xs font-medium text-[#6c7bff] transition-colors hover:text-white"
+              >
+                + Add
+              </button>
+            </div>
+
+            <div className="space-y-2">
+              {members.map((member, i) => (
+                <div key={i} className="flex gap-2">
+                  <Input
+                    placeholder="0x..."
+                    value={member.address}
+                    onChange={(e) => updateMember(i, "address", e.target.value)}
+                    className="flex-1 border-[#2a2d3a] bg-[#0f1117] font-mono text-xs"
+                  />
+                  <Input
+                    type="number"
+                    value={member.amount}
+                    onChange={(e) => updateMember(i, "amount", e.target.value)}
+                    className="w-28 border-[#2a2d3a] bg-[#0f1117] text-sm"
+                  />
+                  {members.length > 1 && (
+                    <button
+                      onClick={() => removeMember(i)}
+                      className="px-2 text-[#8b8fa3] transition-colors hover:text-[#ff6b9d]"
+                    >
+                      &times;
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Advanced governance — collapsed by default */}
+          <div className="rounded-xl border border-[#2a2d3a] bg-[#1a1d27]">
+            <button
+              onClick={() => setShowAdvanced(!showAdvanced)}
+              className="flex w-full items-center justify-between px-5 py-4 text-left"
+            >
+              <span className="text-xs text-[#8b8fa3]">
+                Advanced governance settings
+              </span>
+              <svg
+                className={`h-4 w-4 text-[#8b8fa3] transition-transform ${showAdvanced ? "rotate-180" : ""}`}
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={2}
+                stroke="currentColor"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+              </svg>
+            </button>
+
+            {showAdvanced && (
+              <div className="space-y-6 border-t border-[#2a2d3a] px-5 pb-5 pt-4">
                 <div>
-                  <h3 className="font-medium">Members & Token Distribution</h3>
-                  <p className="text-sm text-[#8b8fa3]">
-                    Add wallet addresses and the number of tokens each member receives.
-                  </p>
+                  <div className="flex justify-between">
+                    <Label className="text-xs">Voting Delay</Label>
+                    <span className="text-xs text-[#6c7bff]">{blocksToTime(votingDelay)}</span>
+                  </div>
+                  <Slider
+                    value={[votingDelay]}
+                    onValueChange={(v) => setVotingDelay(Array.isArray(v) ? v[0] : v)}
+                    min={1} max={50400} step={1800}
+                    className="mt-2"
+                  />
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={addMember}
-                  className="border-[#2a2d3a]"
-                >
-                  + Add Member
-                </Button>
-              </div>
-
-              <div className="space-y-3">
-                {members.map((member, i) => (
-                  <div key={i} className="flex gap-3">
-                    <div className="flex-1">
-                      <Input
-                        placeholder="0x..."
-                        value={member.address}
-                        onChange={(e) => updateMember(i, "address", e.target.value)}
-                        className="border-[#2a2d3a] bg-[#0f1117] font-mono text-sm"
-                      />
-                    </div>
-                    <div className="w-36">
-                      <Input
-                        type="number"
-                        placeholder="Tokens"
-                        value={member.amount}
-                        onChange={(e) => updateMember(i, "amount", e.target.value)}
-                        className="border-[#2a2d3a] bg-[#0f1117]"
-                      />
-                    </div>
-                    {members.length > 1 && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => removeMember(i)}
-                        className="shrink-0 text-[#8b8fa3] hover:text-red-400"
-                      >
-                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
-                        </svg>
-                      </Button>
-                    )}
+                <div>
+                  <div className="flex justify-between">
+                    <Label className="text-xs">Voting Duration</Label>
+                    <span className="text-xs text-[#6c7bff]">{blocksToTime(votingPeriod)}</span>
                   </div>
-                ))}
-              </div>
-
-              <div className="rounded-lg border border-[#2a2d3a] bg-[#1a1d27] p-4">
-                <p className="text-sm text-[#8b8fa3]">
-                  Total supply: <span className="font-medium text-white">{totalSupply.toLocaleString()}</span> {tokenSymbol || "tokens"}
-                </p>
-                <p className="mt-1 text-xs text-[#8b8fa3]">
-                  Tip: Paste CSV data (address,amount per line) into the first address field.
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* Step 3: Governance */}
-          {step === 2 && (
-            <div className="space-y-8">
-              <div>
-                <div className="flex items-center justify-between">
-                  <Label>Voting Delay</Label>
-                  <span className="text-sm text-[#6c7bff]">{blocksToTime(votingDelay)}</span>
+                  <Slider
+                    value={[votingPeriod]}
+                    onValueChange={(v) => setVotingPeriod(Array.isArray(v) ? v[0] : v)}
+                    min={7200} max={302400} step={7200}
+                    className="mt-2"
+                  />
                 </div>
-                <p className="mb-3 text-xs text-[#8b8fa3]">
-                  Review period before voting starts after a proposal is created.
-                </p>
-                <Slider
-                  value={[votingDelay]}
-                  onValueChange={(v) => setVotingDelay(Array.isArray(v) ? v[0] : v)}
-                  min={1}
-                  max={50400}
-                  step={1800}
-                />
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between">
-                  <Label>Voting Duration</Label>
-                  <span className="text-sm text-[#6c7bff]">{blocksToTime(votingPeriod)}</span>
+                <div>
+                  <div className="flex justify-between">
+                    <Label className="text-xs">Quorum</Label>
+                    <span className="text-xs text-[#6c7bff]">{quorum}%</span>
+                  </div>
+                  <Slider
+                    value={[quorum]}
+                    onValueChange={(v) => setQuorum(Array.isArray(v) ? v[0] : v)}
+                    min={1} max={50} step={1}
+                    className="mt-2"
+                  />
                 </div>
-                <p className="mb-3 text-xs text-[#8b8fa3]">
-                  How long members can vote on proposals.
-                </p>
-                <Slider
-                  value={[votingPeriod]}
-                  onValueChange={(v) => setVotingPeriod(Array.isArray(v) ? v[0] : v)}
-                  min={7200}
-                  max={302400}
-                  step={7200}
-                />
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between">
-                  <Label>Quorum</Label>
-                  <span className="text-sm text-[#6c7bff]">{quorum}% of total supply</span>
+                <div>
+                  <div className="flex justify-between">
+                    <Label className="text-xs">Proposal Threshold</Label>
+                    <span className="text-xs text-[#6c7bff]">
+                      {proposalThreshold === 0 ? "Any holder" : `${proposalThreshold.toLocaleString()} tokens`}
+                    </span>
+                  </div>
+                  <Slider
+                    value={[proposalThreshold]}
+                    onValueChange={(v) => setProposalThreshold(Array.isArray(v) ? v[0] : v)}
+                    min={0} max={Math.max(1, Math.floor(totalSupply * 0.01))} step={Math.max(1, Math.floor(totalSupply * 0.001))}
+                    className="mt-2"
+                  />
                 </div>
-                <p className="mb-3 text-xs text-[#8b8fa3]">
-                  Minimum percentage of tokens that must vote for a proposal to pass.
-                </p>
-                <Slider
-                  value={[quorum]}
-                  onValueChange={(v) => setQuorum(Array.isArray(v) ? v[0] : v)}
-                  min={1}
-                  max={50}
-                  step={1}
-                />
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between">
-                  <Label>Proposal Threshold</Label>
-                  <span className="text-sm text-[#6c7bff]">
-                    {proposalThreshold === 0 ? "Any holder" : `${proposalThreshold.toLocaleString()} tokens`}
-                  </span>
-                </div>
-                <p className="mb-3 text-xs text-[#8b8fa3]">
-                  Minimum tokens needed to create a proposal.
-                </p>
-                <Slider
-                  value={[proposalThreshold]}
-                  onValueChange={(v) => setProposalThreshold(Array.isArray(v) ? v[0] : v)}
-                  min={0}
-                  max={Math.floor(totalSupply * 0.01)}
-                  step={Math.max(1, Math.floor(totalSupply * 0.001))}
-                />
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between">
-                  <Label>Execution Delay</Label>
-                  <span className="text-sm text-[#6c7bff]">{secondsToTime(timelockDelay)}</span>
-                </div>
-                <p className="mb-3 text-xs text-[#8b8fa3]">
-                  Mandatory waiting period after a vote passes before it can be executed.
-                </p>
-                <Slider
-                  value={[timelockDelay]}
-                  onValueChange={(v) => setTimelockDelay(Array.isArray(v) ? v[0] : v)}
-                  min={3600}
-                  max={604800}
-                  step={3600}
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Step 4: Review & Deploy */}
-          {step === 3 && (
-            <div className="space-y-6">
-              <h3 className="font-medium">Review Your DAO</h3>
-
-              <div className="space-y-4 rounded-lg border border-[#2a2d3a] bg-[#1a1d27] p-6">
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <p className="text-[#8b8fa3]">DAO Name</p>
-                    <p className="font-medium">{daoName}</p>
+                <div>
+                  <div className="flex justify-between">
+                    <Label className="text-xs">Execution Delay</Label>
+                    <span className="text-xs text-[#6c7bff]">{secondsToTime(timelockDelay)}</span>
                   </div>
-                  <div>
-                    <p className="text-[#8b8fa3]">Token Symbol</p>
-                    <p className="font-medium">{tokenSymbol}</p>
-                  </div>
-                  <div>
-                    <p className="text-[#8b8fa3]">Members</p>
-                    <p className="font-medium">{members.length}</p>
-                  </div>
-                  <div>
-                    <p className="text-[#8b8fa3]">Total Supply</p>
-                    <p className="font-medium">{totalSupply.toLocaleString()} {tokenSymbol}</p>
-                  </div>
-                  <div>
-                    <p className="text-[#8b8fa3]">Voting Delay</p>
-                    <p className="font-medium">{blocksToTime(votingDelay)}</p>
-                  </div>
-                  <div>
-                    <p className="text-[#8b8fa3]">Voting Duration</p>
-                    <p className="font-medium">{blocksToTime(votingPeriod)}</p>
-                  </div>
-                  <div>
-                    <p className="text-[#8b8fa3]">Quorum</p>
-                    <p className="font-medium">{quorum}%</p>
-                  </div>
-                  <div>
-                    <p className="text-[#8b8fa3]">Execution Delay</p>
-                    <p className="font-medium">{secondsToTime(timelockDelay)}</p>
-                  </div>
+                  <Slider
+                    value={[timelockDelay]}
+                    onValueChange={(v) => setTimelockDelay(Array.isArray(v) ? v[0] : v)}
+                    min={3600} max={604800} step={3600}
+                    className="mt-2"
+                  />
                 </div>
               </div>
+            )}
+          </div>
 
-              {!isConnected && (
-                <div className="rounded-lg border border-yellow-500/20 bg-yellow-500/10 p-4 text-sm text-yellow-300">
-                  Connect your wallet to deploy.
-                </div>
-              )}
-
-              {isSuccess && (
-                <div className="rounded-lg border border-green-500/20 bg-green-500/10 p-4 text-sm text-green-300">
-                  DAO created successfully! Redirecting to your dashboard...
-                </div>
-              )}
-
-              {writeError && (
-                <div className="rounded-lg border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-300">
-                  Transaction failed: {writeError.message.slice(0, 200)}
-                </div>
-              )}
-
-              {isConnected && !isSuccess && (
-                <Button
-                  onClick={handleDeploy}
-                  disabled={isPending || isConfirming}
-                  className="w-full bg-[#6c7bff] hover:bg-[#5a6aee]"
-                  size="lg"
-                >
-                  {isPending
-                    ? "Confirm in wallet..."
-                    : isConfirming
-                      ? "Deploying..."
-                      : "Deploy DAO"}
-                </Button>
-              )}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Navigation */}
-      {step < 3 && (
-        <div className="mt-6 flex justify-between">
           <Button
-            variant="outline"
-            onClick={() => setStep(step - 1)}
-            disabled={step === 0}
-            className="border-[#2a2d3a]"
+            onClick={() => setStep(1)}
+            disabled={!step1Valid}
+            className="w-full bg-[#6c7bff] py-6 text-base font-semibold hover:bg-[#5a6aee]"
           >
-            Back
-          </Button>
-          <Button
-            onClick={() => setStep(step + 1)}
-            disabled={!canProceed()}
-            className="bg-[#6c7bff] hover:bg-[#5a6aee]"
-          >
-            Next
+            Review
           </Button>
         </div>
       )}
-      {step === 3 && !isSuccess && (
-        <div className="mt-6">
-          <Button
-            variant="outline"
-            onClick={() => setStep(step - 1)}
-            className="border-[#2a2d3a]"
-          >
-            Back
-          </Button>
+
+      {/* Step 2: Review & Deploy */}
+      {step === 1 && (
+        <div className="space-y-6">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-white">Review & Deploy</h1>
+            <p className="mt-1 text-sm text-[#8b8fa3]">Everything look right?</p>
+          </div>
+
+          <div className="rounded-xl border border-[#2a2d3a] bg-[#1a1d27] p-5">
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <p className="text-xs text-[#8b8fa3]">DAO Name</p>
+                <p className="mt-0.5 font-medium text-white">{daoName}</p>
+              </div>
+              <div>
+                <p className="text-xs text-[#8b8fa3]">Token</p>
+                <p className="mt-0.5 font-medium text-white">{tokenSymbol}</p>
+              </div>
+              <div>
+                <p className="text-xs text-[#8b8fa3]">Members</p>
+                <p className="mt-0.5 font-medium text-white">{members.length}</p>
+              </div>
+              <div>
+                <p className="text-xs text-[#8b8fa3]">Total Supply</p>
+                <p className="mt-0.5 font-medium text-white">{totalSupply.toLocaleString()} {tokenSymbol}</p>
+              </div>
+            </div>
+
+            <div className="mt-4 border-t border-[#2a2d3a] pt-4">
+              <p className="mb-2 text-xs text-[#8b8fa3]">Members</p>
+              {members.map((m, i) => (
+                <div key={i} className="flex items-center justify-between py-1 text-xs">
+                  <span className="font-mono text-[#8b8fa3]">{m.address.slice(0, 6)}...{m.address.slice(-4)}</span>
+                  <span className="text-white">{Number(m.amount).toLocaleString()} {tokenSymbol}</span>
+                </div>
+              ))}
+            </div>
+
+            {showAdvanced && (
+              <div className="mt-4 grid grid-cols-2 gap-3 border-t border-[#2a2d3a] pt-4 text-xs">
+                <div><span className="text-[#8b8fa3]">Voting Delay:</span> <span className="text-white">{blocksToTime(votingDelay)}</span></div>
+                <div><span className="text-[#8b8fa3]">Voting Duration:</span> <span className="text-white">{blocksToTime(votingPeriod)}</span></div>
+                <div><span className="text-[#8b8fa3]">Quorum:</span> <span className="text-white">{quorum}%</span></div>
+                <div><span className="text-[#8b8fa3]">Execution Delay:</span> <span className="text-white">{secondsToTime(timelockDelay)}</span></div>
+              </div>
+            )}
+          </div>
+
+          {!isConnected && (
+            <div className="rounded-lg border border-yellow-500/20 bg-yellow-500/10 p-3 text-center text-sm text-yellow-300">
+              Connect your wallet to deploy
+            </div>
+          )}
+
+          {isSuccess && (
+            <div className="rounded-lg border border-green-500/20 bg-green-500/10 p-3 text-center text-sm text-green-300">
+              DAO created! Redirecting...
+            </div>
+          )}
+
+          {writeError && (
+            <div className="rounded-lg border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-300">
+              Failed: {writeError.message.slice(0, 200)}
+            </div>
+          )}
+
+          <div className="flex gap-3">
+            <Button
+              variant="outline"
+              onClick={() => setStep(0)}
+              className="border-[#2a2d3a]"
+            >
+              Back
+            </Button>
+            {isConnected && !isSuccess && (
+              <Button
+                onClick={handleDeploy}
+                disabled={isPending || isConfirming}
+                className="flex-1 bg-[#6c7bff] py-6 text-base font-semibold hover:bg-[#5a6aee]"
+              >
+                {isPending ? "Confirm in wallet..." : isConfirming ? "Deploying..." : "Deploy DAO"}
+              </Button>
+            )}
+          </div>
         </div>
       )}
     </div>
